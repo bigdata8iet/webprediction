@@ -14,7 +14,6 @@ public class MarkovIIReducer extends
 
 	private IntWritable result = new IntWritable();
 	byte rowkey[] = null;
-	byte nextUrl[] = null;
 
 	public void reduce(Text key, Iterable<IntWritable> values, Context context)
 			throws IOException, InterruptedException {
@@ -28,15 +27,14 @@ public class MarkovIIReducer extends
 
 		// Create the byte[] key from keyArr[0] and keyArr[1]
 
-		rowkey = Bytes.toBytes(keyArr[0] + keyArr[1] + keyArr[2]);
+		rowkey = Bytes.toBytes(keyArr[0] + keyArr[2] + keyArr[1] + keyArr[3]);
 		// Create hbase put object with above key
 		// Add Qualifier as keyArr[2] and sum as value
-		nextUrl = Bytes.toBytes(keyArr[3]);
+		//nextUrl = Bytes.toBytes();
 		// save in hbase.
-
 		try {
 			MarkovIIHBaseOperations.addRecord(MarkovIIHBaseOperations.getTable(),
-					nextUrl, rowkey, sum);
+					 rowkey, sum);
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

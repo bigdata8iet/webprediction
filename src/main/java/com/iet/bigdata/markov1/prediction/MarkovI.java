@@ -8,16 +8,16 @@ public class MarkovI {
 	private String nextUrl = null;
 	private static byte[] res1 = new byte[20];
 	private static byte[] res2 = new byte[128];
-	private static byte count;
+	private byte count;
 	static int i = 0;
 	private static byte[] res3 = new byte[128];
 
-	public static byte getCount() {
+	public byte getCount() {
 		return count;
 	}
 
-	public static void setCount(byte count) {
-		MarkovI.count = count;
+	public void setCount(byte count) {
+		this.count = count;
 	}
 
 	public MarkovI() {
@@ -64,9 +64,11 @@ public class MarkovI {
 
 	public static byte[] pack(byte[] result, String userid, String currentUrl,
 			String nextUrl) {
+		
 		res1 = Bytes.toBytes(userid);
 		res2 = Bytes.toBytes(currentUrl);
 		res3 = Bytes.toBytes(nextUrl);
+		
 		for (i = 0; i < 20; i++) {
 			result[i] = res1[i];
 		}
@@ -82,7 +84,44 @@ public class MarkovI {
 		return result;
 	}
 
-	public static MarkovI unpack(byte[] result, byte[] result2) {
+	public byte[] pack(byte[] result) {
+		
+		if (userid.length() < 20 )
+			userid = String.format("%-20s", userid);
+
+		// Converting url to fixed length
+		if (currentUrl.length() < 128)
+			currentUrl = String.format("%-128s", currentUrl);
+		else if (currentUrl.length() > 128)
+			currentUrl = currentUrl.substring(0, 127);
+
+		if (nextUrl.length() < 128)
+			nextUrl = String.format("%-128s", nextUrl);
+		else if (nextUrl.length() > 128)
+			nextUrl = nextUrl.substring(0, 127);
+
+		res1 = Bytes.toBytes(userid);
+		res2 = Bytes.toBytes(currentUrl);
+		res3 = Bytes.toBytes(nextUrl);
+		
+		for (i = 0; i < 20; i++) {
+			result[i] = res1[i];
+		}
+
+		for (i = 0; i < 128; i++) {
+			result[20 + i] = res2[i];
+		}
+
+		for (i = 0; i < 128; i++) {
+			result[148 + i] = res3[i];
+		}
+
+		return result;
+	}
+
+	
+	
+	public static MarkovI unpack(byte[] result) {
 
 		for (i = 0; i < 20; i++) {
 			res1[i] = result[i];
@@ -90,10 +129,7 @@ public class MarkovI {
 
 		for (i = 0; i < 128; i++) {
 			res2[i] = result[20 + i];
-		}
-
-		for (i = 0; i < 128; i++) {
-			res3[i] = result2[i];
+			res3[i] = result[148+i];
 		}
 
 		return new MarkovI(Bytes.toString(res1), Bytes.toString(res2),

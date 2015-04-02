@@ -1,17 +1,17 @@
-package com.iet.bigdata.markov2.prediction;
+package com.iet.bigdata.loganalysis.DomainConsumption;
 
 import java.util.Iterator;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.iet.bigdata.markov1.prediction.MarkovI;
-
-public class RetrievalMarkovII {
+public class DomainConsumptionRetrieval {
 
 	public static void main(String[] args) throws Exception {
-		MarkovIIHBaseOperations.useTable();
+		DomainConsumption dc=new DomainConsumption();
+
+		HBaseOperations.useTable();
 		int count = 0;
-		Iterator<MarkovII> dataIterator = MarkovIIHBaseOperations.getAllRecords();
+		Iterator<DomainConsumption> dataIterator = HBaseOperations.getAllRecords();
 		while (dataIterator.hasNext()) {
 			System.out.println(dataIterator.next());
 			count++;

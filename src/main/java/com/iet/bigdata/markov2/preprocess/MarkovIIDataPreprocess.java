@@ -20,10 +20,10 @@ public class MarkovIIDataPreprocess {
 		try {
 
 			FileInputStream fs = new FileInputStream(
-					"/mnt/data/workspace/webprediction/test/preprocess_markov1.txt");
+					"/mnt/data/workspace/prediction/test/preprocess_markov1.txt");
 
 			PrintWriter writer = new PrintWriter(
-					"/mnt/data/workspace/webprediction/test/preprocess_markov2.txt");
+					"/mnt/data/workspace/prediction/test/preprocess_markov2.txt");
 
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs));
 			Map<String, String> userPreviousMap = new HashMap<String, String>();

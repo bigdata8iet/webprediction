@@ -21,15 +21,15 @@ public class MarkovIMapredMain {
 		job.setMapperClass(MarkovIMapper.class);
 		job.setCombinerClass(MarkovIReducer.class);
 		job.setReducerClass(MarkovIReducer.class);
-		job.setNumReduceTasks(0);
+		job.setNumReduceTasks(1);
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 
 		FileInputFormat.addInputPath(job, new Path(
-				"/mnt/data/workspace/webprediction/test/preprocess.txt"));
+				"/mnt/data/workspace/prediction/test/preprocess_markov1.txt"));
 		FileOutputFormat.setOutputPath(job, new Path(
-				"/mnt/data/workspace/webprediction/test/output2"));
+				"/mnt/data/workspace/prediction/test/MarkovI_Output"));
 
 		MarkovIHBaseOperations.useTable();
 		System.exit(job.waitForCompletion(true) ? 0 : 1);

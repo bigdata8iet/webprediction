@@ -1,4 +1,4 @@
-package com.iet.bigdata.markov1.prediction;
+package com.iet.bigdata.loganalysis.UserConsumption;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -18,17 +18,25 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
-public class MarkovIHBaseOperations extends Thread {
+import com.iet.bigdata.markov1.prediction.MarkovI;
+
+
+public class HBaseOperations extends Thread {
+
+	static String tableName = "UserConsumptionTable";
+	static byte[] families = Bytes.toBytes("MyFamily");
+	static byte[] consumption = Bytes.toBytes("Consumption");
 	private static Configuration conf = null;
 	private static HColumnDescriptor family = null;
+	
+	static int counter = 0;
 	static {
 		conf = HBaseConfiguration.create();
 	}
 
 	public static void useTable() throws Exception {
 		HBaseAdmin admin = new HBaseAdmin(conf);
-		String tableName = "MarkovITable";
-		byte[] families = Bytes.toBytes("MyFamily");
+		
 		if (admin.isTableAvailable(tableName.getBytes())) {
 			System.out.println(tableName + " Table already exists!");
 			System.out.println("Using Existing Table" + tableName);
@@ -45,43 +53,30 @@ public class MarkovIHBaseOperations extends Thread {
 	}
 
 	public static HTable getTable() throws Exception {
-
-		String tableName = "MarkovITable";
 		HTable table = new HTable(conf, tableName);
 		return table;
 	}
 
 	public static void addRecord(HTable htable,
-			byte[] rowKey, byte count) throws Exception {
+			byte[] rowKey, byte[] usage) throws Exception {
 		try {
-			int counter = 0;
-
-			byte[] families = Bytes.toBytes("MyFamily");
-			byte[] qualifier=Bytes.toBytes("Qualifier");
+			
 			Put put = new Put(rowKey);
-			put.add(families, qualifier, new byte[] { count });
+			put.add(families, consumption, usage);
 			htable.put(put);
 			counter++;
 			System.out.println(counter + " Records Inserted To Table "
 					+ htable.getName());
-			/*
-			 * if (counter % 1000 == 0) {
-			 * 
-			 * System.out.println(counter + " Records Inserted To Table " +
-			 * htable.getName()); sleep((long) 500); System.gc();
-			 * System.runFinalization(); }
-			 */
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static Iterator<MarkovI> getAllRecords() throws IOException {
-		Iterator<MarkovI> dataIterator = new Iterator<MarkovI>() {
-			String tableName = "MarkovITable";
+	public static Iterator<UserConsumption> getAllRecords() throws IOException {
+		Iterator<UserConsumption> dataIterator = new Iterator<UserConsumption>() {
+			
 			HTable table = new HTable(conf, tableName);
-			byte[] qualifier = Bytes.toBytes("Qualifier");
-			byte[] families=Bytes.toBytes("MyFamily");
 			byte[] value = null;
 			byte[] key=null;
 			ResultScanner scanner = table.getScanner(families);
@@ -95,38 +90,35 @@ public class MarkovIHBaseOperations extends Thread {
 				resultIterator.remove();
 			}
 
-			public MarkovI next() {
+			public UserConsumption next() {
+				UserConsumption dc=new UserConsumption();
 				Result result = resultIterator.next();
-				key = result.getRow();
-				value=result.getValue(families, qualifier);
-				MarkovI mk1 = MarkovI.unpack(key);
-				mk1.setCount(value[0]);
-				return mk1;
+				dc.unpackKey(result.getRow());
+				dc.unpackUsage(result.getValue(families, consumption));
+				return dc;
 			}
 		};
 
 		return dataIterator;
 	}
 
-	public static Set<MarkovI> getPrediction(byte[] start,
+	public static Set<UserConsumption> getSelectedInfo(byte[] start,
 			byte[] end) throws Exception {
-
-		Set<MarkovI> mk = new HashSet<MarkovI>();
-		MarkovI element =new MarkovI();
+		
+		Set<UserConsumption> mk = new HashSet<UserConsumption>();
+		UserConsumption element =new UserConsumption();
 		Scan scan = new Scan(start, end);
 		HTable table = getTable();
 		ResultScanner scanner = table.getScanner(scan);
 		for (Result r : scanner) {
 			
-			element = MarkovI.unpack(r.getRow());
-			byte[] value = r.getValue(Bytes.toBytes("MyFamily"), Bytes.toBytes("Qualifier"));
-			element.setCount(value[0]);
-			
+			element.unpackKey(r.getRow());
+			element.unpackUsage(r.getValue(families,consumption));
+			System.out.println(element);
 			mk.add(element);
 		}
 		scanner.close();
 		return mk;
 	}
 
-	
 }

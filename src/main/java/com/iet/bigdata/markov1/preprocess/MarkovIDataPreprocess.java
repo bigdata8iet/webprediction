@@ -17,10 +17,10 @@ public class MarkovIDataPreprocess {
 		try {
 
 			FileInputStream fs = new FileInputStream(
-					"/mnt/data/workspace/webprediction/test/proxy_out");
+					"/mnt/data/workspace/prediction/test/proxy_out");
 
 			PrintWriter writer = new PrintWriter(
-					"/mnt/data/workspace/webprediction/test/preprocess_markov1.txt");
+					"/mnt/data/workspace/prediction/test/preprocess_markov1.txt");
 
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs));
 			Map<String, String> userCurrentUrlMap = new HashMap<String, String>();

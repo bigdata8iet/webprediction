@@ -1,8 +1,10 @@
 package com.iet.bigdata.markov2.prediction;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -13,6 +15,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.iet.bigdata.markov1.prediction.MarkovI;
@@ -26,7 +29,7 @@ public class MarkovIIHBaseOperations extends Thread {
 
 	public static void useTable() throws Exception {
 		HBaseAdmin admin = new HBaseAdmin(conf);
-		String tableName = "MarkovITable";
+		String tableName = "MarkovIITable";
 		byte[] families = Bytes.toBytes("MyFamily");
 		if (admin.isTableAvailable(tableName.getBytes())) {
 			System.out.println(tableName + " Table already exists!");
@@ -45,23 +48,22 @@ public class MarkovIIHBaseOperations extends Thread {
 
 	public static HTable getTable() throws Exception {
 
-		String tableName = "MarkovITable";
+		String tableName = "MarkovIITable";
 		HTable table = new HTable(conf, tableName);
 		return table;
 	}
 
-	public static void addRecord(HTable htable, byte[] qualifier,
+	public static void addRecord(HTable htable,
 			byte[] rowKey, byte count) throws Exception {
 		try {
 			int counter = 0;
 
 			byte[] families = Bytes.toBytes("MyFamily");
+			byte[] qualifier=Bytes.toBytes("Qualifier"); 
 			Put put = new Put(rowKey);
 			put.add(families, qualifier, new byte[] { count });
 			htable.put(put);
 			counter++;
-			System.out.println(counter + " Records Inserted To Table "
-					+ htable.getName());
 
 			/*
 			 * if (counter % 1000 == 0) {
@@ -75,11 +77,17 @@ public class MarkovIIHBaseOperations extends Thread {
 		}
 	}
 
-	public static Iterator<MarkovI> getAllRecords() throws IOException {
-		Iterator<MarkovI> dataIterator = new Iterator<MarkovI>() {
-			String tableName = "MarkovITable";
+	public static Iterator<MarkovII> getAllRecords() throws IOException {
+		Iterator<MarkovII> dataIterator = new Iterator<MarkovII>() {
+			String tableName = "MarkovIITable";
 			HTable table = new HTable(conf, tableName);
-			ResultScanner scanner = table.getScanner(Bytes.toBytes("MyFamily"));
+
+			byte[] qualifier = Bytes.toBytes("Qualifier");
+			byte[] families=Bytes.toBytes("MyFamily");
+			byte[] value = null;
+			byte[] key=null;
+
+			ResultScanner scanner = table.getScanner(families);
 			Iterator<Result> resultIterator = scanner.iterator();
 
 			public boolean hasNext() {
@@ -90,26 +98,37 @@ public class MarkovIIHBaseOperations extends Thread {
 				resultIterator.remove();
 			}
 
-			public MarkovI next() {
+			public MarkovII next() {
 				Result result = resultIterator.next();
-				byte[] value = null;
-				byte[] qualifier = null;
-				Map<byte[], byte[]> family = result.getFamilyMap(Bytes
-						.toBytes("MyFamily"));
-				for (Map.Entry<byte[], byte[]> entry : family.entrySet()) {
-					qualifier = entry.getKey();
-					value = entry.getValue();
-				}
-
-				byte[] key = result.getRow();
-
-				MarkovI mk1 = MarkovI.unpack(key, qualifier);
-				mk1.setCount(value[0]);
-				return mk1;
+				key = result.getRow();
+				value=result.getValue(families, qualifier);
+				MarkovII mk2 = MarkovII.unpack(key);
+				mk2.setCount(value[0]);
+				return mk2;
 			}
 		};
 
 		return dataIterator;
+	}	
+	
+	public static Set<MarkovII> getPrediction(byte[] start,
+			byte[] end) throws Exception {
+
+		Set<MarkovII> mk = new HashSet<MarkovII>();
+		MarkovII element =new MarkovII();
+		Scan scan = new Scan(start, end);
+		HTable table = getTable();
+		ResultScanner scanner = table.getScanner(scan);
+		for (Result r : scanner) {
+			
+			element = MarkovII.unpack(r.getRow());
+			byte[] value = r.getValue(Bytes.toBytes("MyFamily"), Bytes.toBytes("Qualifier"));
+			element.setCount(value[0]);
+			mk.add(element);
+		}
+		scanner.close();
+		return mk;
 	}
+
 
 }
